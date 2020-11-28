@@ -9,6 +9,7 @@ Git is separated into two different folders, one for app development, the other 
 Use https://reactnative.dev/docs/environment-setup to setup env
 only thing changed is nodejs version
 There is a section that says 'Creating new application'. Do not do this as app is already created
+Instead run `npm install` this will install all app dependecies
 Continue on section that says 'Running your React Native application'
 
 Install chocolatey from https://chocolatey.org/install
