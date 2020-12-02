@@ -11,6 +11,7 @@ target 'safetrip' do
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
+
   target 'safetripTests' do
     inherit! :complete
     # Pods for testing

@@ -25,6 +25,16 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 import Card1 from './components/card';
+import Timeline from './timeline';
+import SearchScreen from './searchscreen';
+import Positive from './positive';
+import NoCovid from './nocovid';
+import Report from './report';
+import LocationPopUp from './locationpopup';
+import AfterSearch from './aftersearch';
+import CovidMap from './covidmap';
+import SubVE from './subve';
+import SafeTrip from './safetrip';
 
 // const Card = () => {
 //   return (
@@ -35,7 +45,8 @@ import Card1 from './components/card';
 // };
 
 const App: () => React$Node = () => {
-  const [screen, setScreen] = useState('main');
+  const [screen, setScreen] = useState('subve');
+  console.log('helpo');
 
   const buildMain = () => {
     return (
@@ -49,8 +60,26 @@ const App: () => React$Node = () => {
     );
   };
 
-  if (screen === 'main') {
-    return buildMain();
+  if (screen === 'safetrip') {
+    return <SafeTrip />;
+  } else if (screen === 'timeline') {
+    return <Timeline />;
+  } else if (screen === 'search') {
+    return <SearchScreen />;
+  } else if (screen === 'positive') {
+    return <Positive />;
+  } else if (screen === 'nocovid') {
+    return <NoCovid />;
+  } else if (screen === 'report') {
+    return <Report />;
+  } else if (screen === 'locationpopup') {
+    return <LocationPopUp />;
+  } else if (screen === 'aftersearch') {
+    return <AfterSearch />;
+  } else if (screen === 'covidmap') {
+    return <CovidMap />;
+  } else if (screen === 'subve') {
+    return <SubVE />;
   }
 };
 
