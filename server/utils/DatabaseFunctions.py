@@ -54,7 +54,7 @@ def getRndStr(length):
 
 
 # Generates a random filler date value for filling the dob (date of birth) field.
-# Returns a datetime.date object between January 1, 1940 and December 31, 2008 inclusive.
+# Returns a datetime.date object between stDte and edDte inclusive.
 def getRndDate(stDte, edDte):
     diffTime = edDte - stDte
     diffDate = diffTime.days
@@ -333,8 +333,10 @@ def calculateAge(born):
 
 def getUserDataForML(conn):
     cur = conn.cursor()
-    getSQL = """SELECT u.usruuid, u.firstname, u.lastname, u.dob, u.gender, c.condcount FROM userinfo u LEFT JOIN (
-                SELECT hcuuid, COUNT (hcuuid) AS condcount FROM hascondition GROUP BY hcuuid) AS c ON c.hcuuid = u.usruuid"""
+    getSQL = """SELECT u.usruuid, u.firstname, u.lastname, u.dob, u.gender, COALESCE(c.ccount, 0) AS condcount, ls.risksum FROM userinfo u 
+                LEFT JOIN (SELECT hcuuid, COUNT (hcuuid) AS ccount FROM hascondition GROUP BY hcuuid) AS c ON c.hcuuid = u.usruuid 
+                INNER JOIN (SELECT vstuuid, SUM(locriskscore) AS risksum FROM visit INNER JOIN location ON vstlocationid = loclocationid GROUP BY vstuuid) AS ls
+                ON vstuuid = usruuid;"""
 
     cur.execute(getSQL)
 
@@ -347,6 +349,43 @@ def getUserDataForML(conn):
     ]
 
     return rows
+
+
+def updateUserRiskScore(conn, uuidStr, riskScore):
+    cur = conn.cursor()
+    getIdSQL = "SELECT COUNT(usruuid) FROM userinfo WHERE usruuid = %s"
+    addSQL = "UPDATE userinfo SET usrriskscore = %s WHERE usruuid = %s"
+    cur.execute(getIdSQL)
+    row = cur.fetchone()
+    if row[0] == 0:
+        print("Invalid user", uuidStr)
+    elif riskScore < 0 or riskScore > 100:
+        print("Invalid risk score", riskScore)
+    else:
+        cur.execute(addSQL, (riskScore, uuidStr))
+
+
+def showTableSchema(conn, tableName):
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = %s",
+        (tableName, ))
+    row = cur.fetchall()
+    for item in row:
+        print(item)
+
+
+def applyLocRisk(conn):
+    cur = conn.cursor()
+    incrementSQL = """UPDATE location SET locriskscore = locriskscore + 1 FROM ((visit INNER JOIN userinfo ON usruuid = vstuuid) INNER JOIN covidtest ON usruuid = ctuuid) 
+    WHERE location.loclocationid = vstlocationid AND result = %s"""
+    cur.execute(incrementSQL, (True, ))
+
+
+def applyRndLocRisk(conn):
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE location SET locriskscore = floor(random() * 999 + 1);")
 
 
 # Main module begins here
@@ -368,7 +407,7 @@ psycopg2.extras.register_uuid()
 
 #addLocation(conn)
 #viewAllUsersAndConds(conn)
-#viewLocations(conn)
+
 #viewUsers(conn)
 #showConditions(conn)
 #viewNumUsersAndConds(conn)
@@ -380,7 +419,18 @@ psycopg2.extras.register_uuid()
 
 #showVisits(conn, "4cd124d3-c304-4db0-8cd2-a0af2484716c")
 #addPosTests(conn)
+
+#applyLocRisk(conn)
+
+for i in range(4):
+    addMoreConditions(conn)
+
 dictUsrData = getUserDataForML(conn)
+
+#cur = conn.cursor()
+#cur.execute("UPDATE location SET locriskscore = 0")
+#applyRndLocRisk(conn)
+#viewLocations(conn)
 
 for item in dictUsrData:
     print(item)
